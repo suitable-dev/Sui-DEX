@@ -32,6 +32,8 @@ module dex::dex {
         treasury_cap_dex: TreasuryCap<DEX>,
     }
 
+     
+
     public struct WithdrawalEvent has copy, drop {
         message: vector<u8>
     }
@@ -337,6 +339,18 @@ public fun repay_eth(account: &mut CollateralAccount, pool: &mut LendingPool, re
         });
     }
 
+    public fun send_eth(sender_balance: &mut LendingPool, recipient: address, amount: u64, ctx: &mut TxContext) {
+        let coin_send = coin::take(&mut sender_balance.eth_supply, amount * FLOAT_SCALING, ctx);
+        transfer::public_transfer(coin_send, recipient);
+
+        // Emit transfer event
+
+        emit(TransferEvent{
+            message: b"Transfer successful: ETH sent. DEX token reward granted.",
+        });
+    }
+
+
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext): (LendingPool, DEXTreasuryCap) {
         let pool = init(DEX {}, ctx);
@@ -347,4 +361,3 @@ public fun repay_eth(account: &mut CollateralAccount, pool: &mut LendingPool, re
         (pool, dex_token_cap)
     }
 }
-
