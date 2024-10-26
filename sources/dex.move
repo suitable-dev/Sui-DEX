@@ -30,6 +30,7 @@ module dex::dex {
         treasury_cap_naira: TreasuryCap<NAIRA>,
         treasury_cap_eth: TreasuryCap<ETH>,
         treasury_cap_dex: TreasuryCap<DEX>,
+        treasury_cap_sui: TreasuryCap<SUI>,
     }
 
      
@@ -134,29 +135,35 @@ module dex::dex {
     }
 
     
-    public fun mint_naira(cap: &mut TreasuryCap<NAIRA>, ctx: &mut TxContext, amount: u64): Coin<NAIRA> {
+    public fun mint_naira(cap: &mut TreasuryCap<NAIRA>, amount: u64, ctx: &mut TxContext){
     let minted_coin = coin::mint(cap, amount * FLOAT_SCALING, ctx);
      //transfer::public_transfer(minted_coin, tx_context::sender(ctx));
     event::emit(DepositEvent {
         message: b"NAIRA deposited successfully",
     });
-    minted_coin
+     let sender = tx_context::sender(ctx);
+        transfer::public_transfer(minted_coin, sender);
 }
 
 
 
-    public fun mint_sui(cap: &mut TreasuryCap<SUI>, ctx: &mut TxContext, amount: u64): Coin<SUI> {
+    public fun mint_sui(cap: &mut TreasuryCap<SUI>, amount: u64, ctx: &mut TxContext){
     let minted = coin::mint(cap, amount * FLOAT_SCALING, ctx);
-    minted
+    
+        let sender = tx_context::sender(ctx);
+        transfer::public_transfer(minted, sender);
+
 }
 
 
 
 
-    public fun mint_eth(cap: &mut TreasuryCap<ETH>, ctx: &mut TxContext, amount: u64): Coin<ETH>{
+    public fun mint_eth(cap: &mut TreasuryCap<ETH>, amount: u64, ctx: &mut TxContext){
+       // let cap = &mut TreasuryCap<ETH>;
     let minted_coin = coin::mint(cap, amount * FLOAT_SCALING, ctx);
    // transfer::public_transfer(minted_coin, tx_context::sender(ctx));
-    minted_coin
+     let sender = tx_context::sender(ctx);
+        transfer::public_transfer(minted_coin, sender);
 }
 
 
@@ -351,13 +358,8 @@ public fun repay_eth(account: &mut CollateralAccount, pool: &mut LendingPool, re
     }
 
 
-    #[test_only]
-    public fun init_for_testing(ctx: &mut TxContext): (LendingPool, DEXTreasuryCap) {
-        let pool = init(DEX {}, ctx);
-        let dex_token_cap = DEXTreasuryCap {
-            id: object::new(ctx),
-            cap: pool.treasury_cap,
-        };
-        (pool, dex_token_cap)
+      #[test_only]
+    public fun init_for_testing(ctx: &mut TxContext){
+        init(DEX {}, ctx)
     }
 }
